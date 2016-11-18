@@ -1,0 +1,173 @@
+
+$settings: (
+    columns: 12,
+    breakpoints: (
+       c: "only screen",
+      tn: "only screen and (min-width: 320px)",
+      xs: "only screen and (min-width: 480px)",
+      sm: "only screen and (min-width: 768px)",
+      md: "only screen and (min-width: 992px)",
+      lg: "only screen and (min-width: 1201px)",
+      xl: "only screen and (min-width: 1921px)"
+    ),
+    minupwards: (
+      tn: "only screen and (max-width: 479px) and (min-width: 320px)",
+      xs: "only screen and (max-width: 767px) and (min-width: 480px)",
+      sm: "only screen and (max-width: 991px) and (min-width: 768px)",
+      md: "only screen and (max-width: 1200px) and (min-width: 992px)",
+      lg: "only screen and (max-width: 1920px) and (min-width: 1201px)"
+    ),
+    gutters: 11,
+    guttersize: (
+        1:   6.4999%,
+        2:  14.9925%,
+        3:  23.4999%,
+        4:  32.0000%,
+        5:  40.5022%,
+        6:  48.9956%,
+        7:  57.4382%,
+        8:  65.9631%,
+        9:  74.5156%,
+        10: 82.9875%,
+        11: 91.4913%
+    )
+);
+
+@mixin renderGridStyles($settings){
+  $breakpoints: map-get($settings, "breakpoints");
+  @each $key, $breakpoint in $breakpoints {
+    @include media($breakpoint) {
+      @include renderGrid($key, $settings);
+    }
+  }
+}
+
+@mixin renderSecondaryBreaks($settings){
+  @each $key, $breakpoint in map-get($settings, "minupwards"){
+    @include media($breakpoint) {
+      @include renderSecond($key);
+    }
+  }
+}
+
+@mixin renderSecond($key) {
+  .row { 
+    &.#{$key}-center { justify-content: center; }
+    &.#{$key}-end { justify-content: flex-end; }
+    &.#{$key}-middle { align-items: center; }
+    &.#{$key}-bottom { align-items: flex-end; }
+    &.#{$key}-around { justify-content: space-around; }
+    &.#{$key}-between { justify-content: space-between; }
+  }
+  
+  .#{$key}-hidden { display: none; }
+  .#{$key}-show { display: initial; }
+}
+
+@mixin renderGrid($key, $settings) {
+  @if $key == 'c' or $key == 'xl' {
+    @include renderSecond($key)
+  }
+  .gutters {
+    > [class*="#{$key}-"] {
+      margin-left: 1%;
+      margin-right: 1%;
+    }
+    > [class*="#{$key}-"]:first-child { margin-left: 0; }
+    > [class*="#{$key}-"]:last-child { margin-right: 0; }
+  }
+  
+  .#{$key}-auto { flex-grow: 1; }
+  .#{$key}-first { order: -1; }
+  .#{$key}-last { order: 1; }
+  
+  $i: 1;
+  @while $i <= map-get($settings, "columns") {
+    .#{$key}-#{$i} {
+      @if $i == 5 {
+        flex-basis: 100% * $i / map-get($settings,"columns") - 0.005%;
+      } @else {
+        flex-basis: 100% * $i / map-get($settings,"columns") - 0.001%;
+      }
+    }
+    $i: $i+1;
+  }
+  
+  @each $index, $percentage in map-get($settings, "guttersize") {
+    .gutters > .#{$key}-#{$index} {
+      flex-basis: $percentage;
+    }
+    :not(.reversed) > .#{$key}-push-#{$index} {
+      margin-left: 100% * $index / map-get($settings,"columns");
+    }
+    .reversed > .#{$key}-push-#{$index} {
+      margin-right: 100% * $index / map-get($settings,"columns");
+    } 
+    
+  }
+  
+}
+
+@mixin media($queryString){
+    @media #{$queryString} {
+      @content;
+    }
+}
+
+/**
+ * @version v1.0.0
+ * @author Lukas Jankowski
+ * Flexboxgrid for CSS
+ */
+/**
+ * Setting border-box is required
+ */
+html { box-sizing: border-box; }
+*, *:before, *:after { box-sizing: inherit; }
+
+.row {
+  display: -webkit-flex;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start; 
+  align-items: flex-start;
+  // You might want to set overflow:hidden
+}
+
+.row {
+  flex-direction: row;
+
+  &.reverse { flex-direction: row-reverse; }
+  &.center { justify-content: center; }
+  &.end { justify-content: flex-end; }
+  &.middle { align-items: center; }
+  &.bottom { align-items: flex-end; }
+}
+
+.row.fill, .column.fill { align-items: stretch; }
+.around { justify-content: space-around; }
+.between { justify-content: space-between; }
+
+
+[class*="c-"], [class*="tn-"], [class*="xs-"], [class*="sm-"], 
+[class*="md-"], [class*="lg-"], [class*="xl-"] { 
+  flex-basis: 100%;
+
+  &.fill { align-self: stretch; }
+  &.no-fill { align-self: flex-start; }
+}
+
+.c-auto, .tn-auto, .xs-auto, .sm-auto,
+.md-auto, .lg-auto, .xl-auto { flex-basis: 0; }
+
+.start { align-self: flex-start; }
+
+.row {
+  > .middle  { align-self: center; }
+  > .bottom { align-self: flex-end; }
+}
+
+
+@include renderGridStyles($settings);
+
+@include renderSecondaryBreaks($settings);
